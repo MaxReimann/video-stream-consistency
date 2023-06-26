@@ -1,10 +1,19 @@
 # Interactive Temporal Video Consistency #
 
+
+
+
+https://github.com/MaxReimann/video-stream-consistency/assets/5698958/c4567551-0d11-4684-a124-9e315d5156bc
+
+
+
 ### [Project Page](https://maxreimann.github.io/stream-consistency/) | [Paper](https://arxiv.org/abs/2301.00750)
 
 Blind video consistency produces temporally consistent videos from per-frame processed/stylized inputs without knowledge of the applied processing methods. 
 
 This repo implements a low-latency method for improving temporal consistency in **high-resolution videos** and **video streams** and offers interactive control over the flickering amount.
+
+
 
 Official Implementation of:<br/> 
 **"Interactive Control over Temporal Consistency while Stylizing Video Streams"** <br/> 
