@@ -22,13 +22,13 @@ FlowVideoConsistency is the CLI-based application, FlowVideoConsistencyPlayer th
 
 Process Frame directories:
 ```
-Usage: ./FlowVideoConsistency [options] originalFrames processedFrames stabilizedFrames
+Usage: ./FlowVideoConsistency -c pwcnet-light originalFrames processedFrames stabilizedFrames
 
 Options:
   -?, -h, --help                    Displays this help.
   -c, --compute <model>             Compute optical flow using <model>. One of
                                     ['pwcnet', 'pwcnet-light']
-  -f, --flow-directory <directory>  Read flow from <directory>.
+  -f, --flow-directory <directory>  Read flow from <directory>. Alternative to compute
 
 Arguments:
   originalFrames                    Original frame directory
@@ -38,12 +38,12 @@ Arguments:
 
 Process input videos, write frames: 
 ```
-Usage: ./FlowVideoConsistency [options] test/input.mp4  test/processed.mp4 test/output
+Usage: ./FlowVideoConsistency -c pwcnet-light test/input.mp4  test/processed.mp4 test/output
 ```
 
 Process input videos, directly encode output video: 
 ```
-Usage: ./FlowVideoConsistency [options] test/input.mp4  test/processed.mp4 test/output.mp4
+Usage: ./FlowVideoConsistency -c pwcnet-light ../videos/input.mp4 ../videos/processed.mp4 output.mp4
 ```
 
 Start FlowVideoConsistencyPlayer GUI:
