@@ -65,20 +65,20 @@ FlowModel::FlowModel(QString modelChoice,  OrtContext* ort_context,
             outputFlow = ImageArrayIOHelper::createImageArrayIO<CpuIO<float_t>>(width, height, 3, batchSize);
             flowVis = ImageArrayIOHelper::createImageArrayIO<CpuIO<float_t>>(width, height, 3, 0);
             for (int i = 0; i < 2; i++) {
-                nmpInputImages.push_back(ImageArrayIOHelper::createImageArrayIO<CpuIO<uint8_t>>(width, height, 4, batchSize));
+                inputImages.push_back(ImageArrayIOHelper::createImageArrayIO<CpuIO<uint8_t>>(width, height, 4, batchSize));
             }
             break;
         case InferenceProvider::CUDA:
             outputFlow = ImageArrayIOHelper::createImageArrayIO<CudaIO<float_t>>(width, height, 3, batchSize);
             flowVis = ImageArrayIOHelper::createImageArrayIO<CudaIO<float_t>>(width, height, 3, 0);
             for (int i = 0; i < 2; i++) {
-                nmpInputImages.push_back(ImageArrayIOHelper::createImageArrayIO<CudaIO<uint8_t>>(width, height, 4, batchSize));
+                inputImages.push_back(ImageArrayIOHelper::createImageArrayIO<CudaIO<uint8_t>>(width, height, 4, batchSize));
             }
             break;
     }
 
-    InferenceModelVariant::MappedIO input1{"frame1", nmpInputImages[0]};
-    InferenceModelVariant::MappedIO input2{"frame2", nmpInputImages[1]};
+    InferenceModelVariant::MappedIO input1{"frame1", inputImages[0]};
+    InferenceModelVariant::MappedIO input2{"frame2", inputImages[1]};
 
     std::map<std::string, InferenceModelVariant::MappedIO> inputs; 
     inputs.emplace("frame1", std::move(input1));
@@ -116,7 +116,6 @@ FlowModel::FlowModel(QString modelChoice,  OrtContext* ort_context,
     );
 
     flowvismodel->loadSession();
-
 }
 
 void FlowModel::run(QList<QSharedPointer<QImage>>& originalFramesQt, QList<QSharedPointer<GPUImage>>& results, int indexFirst, int indexSecond,flowTiming* timing) {
@@ -140,8 +139,8 @@ void FlowModel::run(QList<QSharedPointer<QImage>>& originalFramesQt, QList<QShar
     std::byte* im1 = &imgBuffer[indexFirst*bytesPerImage];
     std::byte* im2 = &imgBuffer[indexSecond*bytesPerImage];
 
-    nmpInputImages[0]->setData(im1, bytesPerImage * batchSize);
-    nmpInputImages[1]->setData(im2, bytesPerImage * batchSize);
+    inputImages[0]->setData(im1, bytesPerImage * batchSize);
+    inputImages[1]->setData(im2, bytesPerImage * batchSize);
 
     timing->loadTime +=  timer.elapsed() - beforeLoad;
     auto beforerun = timer.elapsed();
@@ -180,8 +179,6 @@ void FlowModel::run(QList<QSharedPointer<QImage>>& originalFramesQt, QList<QShar
     // copy output to batchsize number GPUImages
     for (int b=0; b < batchSize; b++)
     {
-        std::cout << "flowWidth: " << flowWidth << " flowHeight: " << flowHeight << std::endl;
-        std::cout << "results[b]->width: " << results[b]->width << " results[b]->height: " << results[b]->height << std::endl;
         if (flowWidth != results[0]->width || flowHeight != results[0]->height) {
             GPUImage tmpFlowLowRes(flowWidth, flowHeight, 3);
             tmpFlowLowRes.copyFromCudaBuffer( reinterpret_cast<std::byte*>(flowVis->resourcePointer()) + byteNum*b, byteNum);
@@ -190,7 +187,6 @@ void FlowModel::run(QList<QSharedPointer<QImage>>& originalFramesQt, QList<QShar
             results[b]->copyFromCudaBuffer( reinterpret_cast<std::byte*>(flowVis->resourcePointer()) + byteNum*b, byteNum);
         }
     }
-
 
     timing->runTime += timer.elapsed() - beforerun;
  }
