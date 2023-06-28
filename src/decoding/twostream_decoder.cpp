@@ -62,10 +62,6 @@ void TwoStreamDecoder::run() {
   for (auto& stage : stages_) {
     stage.join();
   }
-
-  // if (exception_) {
-  //   std::rethrow_exception(exception_);
-  // }
 }
 
 void TwoStreamDecoder::thread_demultiplex_left() {
@@ -139,8 +135,6 @@ bool TwoStreamDecoder::process_packet(const int video_idx, AVPacket* packet, AVF
   while (video_decoder_[video_idx]->receive(frame_decoded)) {
     frame_decoded->pts = av_rescale_q(frame_decoded->pts, demuxer_[video_idx]->time_base(), microseconds);
 
-    // std::cout << "video_idx " << video_idx << " frame_decoded->pts: " << frame_decoded->pts << std::endl;
-
     // send decodes frame to filterer
     if (!video_filterer_[video_idx]->send(frame_decoded)) {
       throw std::runtime_error("Error while feeding the filtergraph");
@@ -153,17 +147,7 @@ bool TwoStreamDecoder::process_packet(const int video_idx, AVPacket* packet, AVF
       if (!video_filterer_[video_idx]->receive(frame_filtered.get())) {
         break;
       }
-
-      // scale and convert pixel format before pushing to frame queue for displaying
-      // std::unique_ptr<AVFrame, std::function<void(AVFrame*)>> frame_converted{av_frame_alloc(), [](AVFrame* f) { av_free(f->data[0]); }};
-      // if (av_frame_copy_props(frame_converted.get(), frame_filtered.get()) < 0) {
-      //   throw std::runtime_error("Copying filtered frame properties");
-      // }
-      // if (av_image_alloc(frame_converted->data, frame_converted->linesize, format_converter_[video_idx]->dest_width(), 
-      //             format_converter_[video_idx]->dest_height(), format_converter_[video_idx]->output_pixel_format(), 1) < 0) {
-      //   throw std::runtime_error("Allocating converted picture");
-      // }
-
+      
       std::unique_ptr<TimedQFrame> frame_converted = std::make_unique<TimedQFrame>();
       frame_converted->pts = frame_filtered->pts;
       frame_converted->frame = QSharedPointer<QImage>(new QImage(max_width_, max_height_, QImage::Format_RGBA8888));
@@ -211,7 +195,6 @@ void TwoStreamDecoder::decode_video(const int video_idx) {
 
         std::chrono::milliseconds sleep(10);
         std::this_thread::sleep_for(sleep);
-        // continue;
 
         const AVRational microseconds = {1, AV_TIME_BASE};
         bool seekDecoding = true;
@@ -248,17 +231,12 @@ void TwoStreamDecoder::decode_video(const int video_idx) {
 
 void TwoStreamDecoder::video() {
   try {
-  //   std::deque<std::unique_ptr<AVFrame, std::function<void(AVFrame*)>>> left_frames;
-  //   std::deque<std::unique_ptr<AVFrame, std::function<void(AVFrame*)>>> right_frames;
     std::deque<std::unique_ptr<TimedQFrame>> left_frames;
     std::deque<std::unique_ptr<TimedQFrame>> right_frames;
     int frame_offset = 0;
 
-    // std::unique_ptr<AVFrame, std::function<void(AVFrame*)>> frame_left{nullptr, [](AVFrame* f) { av_frame_free(&f); }};
-    // std::unique_ptr<AVFrame, std::function<void(AVFrame*)>> frame_right{nullptr, [](AVFrame* f) { av_frame_free(&f); }};
     std::unique_ptr<TimedQFrame> frame_left{nullptr};
     std::unique_ptr<TimedQFrame> frame_right{nullptr};
-    
 
     int64_t left_pts = 0;
     int64_t left_decoded_picture_number = 0;
@@ -273,20 +251,14 @@ void TwoStreamDecoder::video() {
     sorted_flat_deque<int32_t> right_deque(8);
 
     int64_t right_time_shift = time_shift_ms_ * MILLISEC_TO_AV_TIME;
-    // int total_right_time_shifted = 0;
 
     for (uint64_t frame_number = 0;; ++frame_number) {
       std::string error_message;
 
-      // display_->input();
-
       float current_position = left_pts * AV_TIME_TO_SEC;
-
-
 
       if (videoControl->get_is_seeking()) { //} && (videoControl->get_seek_absolute() / 1e6 != videoControl->get_current_position() / 1e6)) {
         std::cout << "start of 2strdecod loop. Seeking to " << videoControl->get_seek_absolute() / 1000 << "ms" << std::endl;
-        // total_right_time_shifted += videoControl->get_shift_right_frames();
 
         if (packet_queue_[0]->is_finished() || packet_queue_[1]->is_finished()) {
           error_message = "Unable to perform seek (end of file reached)";
@@ -340,14 +312,8 @@ void TwoStreamDecoder::video() {
 
           // bool backward = ((next_position - current_position) < 0.0F);
           std::cout << "next_position Seeking to " << next_position << "s" << std::endl;
-          // std::cout << "current_position (decoded)" << current_position << "s" << std::endl;
-          // std::cout << "seek_absolute " << videoControl->get_seek_absolute() << "pts" << std::endl;
           std::cout << "get_current_position (displayed)" << videoControl->get_current_position() << " pts " << videoControl->get_current_position() * AV_TIME_TO_SEC << "s" << std::endl;
-          // std::cout << "seek_from_start " << videoControl->get_seek_from_start() << std::endl;
-          // std::cout << "backward " << backward << std::endl;
 
-          // if ((!demuxer_[0]->seek(std::max(0.0F, next_position), backward) && !backward) || (!demuxer_[1]->seek(std::max(0.0F, next_position), backward) && !backward)) {
-            // AVSEEK_FLAG_BACKWARD  indicates that you want to find closest keyframe having a smaller timestamp than the one you are seeking.
           if (!demuxer_[0]->seek(std::max(0.0F, next_position), true) || !demuxer_[1]->seek(std::max(0.0F, next_position), true)) {
             // restore position if unable to perform forward seek
             std::cerr << "Unable to seek" << std::endl;
@@ -450,7 +416,6 @@ void TwoStreamDecoder::video() {
       }
 
       if (store_frames) {
-        // TODO(jon): use pair
         if (left_frames.size() >= 50) {
           left_frames.pop_back();
         }
@@ -482,14 +447,12 @@ void TwoStreamDecoder::video() {
       const std::string current_total_browsable = string_sprintf("%d/%d", frame_offset + 1, static_cast<int>(left_frames.size()));
       // std::cout << "current_total_browsable " << current_total_browsable << " offset " << frame_offset << std::endl;
 
-
       auto frame = std::make_unique<CombinedFrame>();
       frame->frame_offset = frame_number;
       frame->pts = left_frames[frame_offset]->pts;// * AV_TIME_TO_SEC;
       frame->original = left_frames[frame_offset]->frame;
       frame->processed = right_frames[frame_offset]->frame;
 
-      // std::cout << "left pts " << left_frames[frame_offset]->pts << " right pts " << right_frames[frame_offset]->pts << " delta " << delta_left_pts << " " << delta_right_pts << std::endl;
       std::cout << "decoded frame " << frame_number << " at " << frame->pts * AV_TIME_TO_SEC << "s " << left_frames[frame_offset]->pts << " pts " << "[frame queue]" << std::endl;
       combined_frame_queue.push(std::move(frame));      
 
