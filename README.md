@@ -46,6 +46,8 @@ Arguments:
   processedFrames                   Processed frames directory
   stabilizedFrames                  Output directory for stabilized frames
 ```
+Frames must be of format `123456.png` and start with index 1 (as ffmpeg outputs frames)
+
 
 Process input videos, write frames: 
 ```
