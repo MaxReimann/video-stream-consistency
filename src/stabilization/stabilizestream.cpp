@@ -16,9 +16,10 @@
 #include "stabilizestream.h"
 #include <QDir>
 #include <QCoreApplication>
-// #include <QCommandLineParser>
 #include <optional>
 #include <thread>
+
+#define WARMUP_FRAMES (k+5)
 
 StreamStabilizer::StreamStabilizer(QDir originalVidPath,  QDir processedVidPath, std::optional<QString> stabilizedDir, std::optional<QString> modelType, int width, int height, int batchSize, bool streamingOutput) : 
 VideoStabilizer(width, height, batchSize,  modelType, true), originalVidPath(originalVidPath), processedVidPath(processedVidPath), stabilizedDirorVid(stabilizedDir), streamingOutput(streamingOutput),
@@ -67,14 +68,11 @@ bool StreamStabilizer::loadFrame(int i)
         return false;
     }
 
-    // assert(i == frame_info->frame_offset);
     m_lastPts = frame_info->pts;
-    // std::cout << "Frame " << i << " pts: " << m_lastPts << std::endl;
     originalFramesQt << frame_info->original;
     originalFrames << imageToGPU(*frame_info->original.get());
     processedFrames << imageToGPU(*frame_info->processed.get());
     m_last_frame_info = std::move(frame_info);
-    std::cout << "last loaded frame: " << i << std::endl;
     return true;
 }
 
@@ -93,7 +91,6 @@ void StreamStabilizer::outputFrame(int i, QSharedPointer<QImage> q) {
                 emit frameReady(m_lastPts, m_last_frame_info->original);
                 break;
             case VideoType::FLOWVIS:
-                // auto flowvis = computeFlowVis(i);
                 emit frameReady(m_lastPts, computeFlowVis(i));
                 break;
             default:
@@ -129,9 +126,9 @@ bool StreamStabilizer::processOneFrame(int i) {
         return false;
     }
 
-    if (i == 105) {
-        int count = i - (k+5);
-        qDebug() << "Per-frame time in ms averaged over 100 frames (without first 5 for warmup):" << "load (wait+to_gpu): " << 
+    if (i == 100 + WARMUP_FRAMES) {
+        int count = i - WARMUP_FRAMES;
+        qDebug() << "Per-frame time in ms averaged over 100 frames (without first " << WARMUP_FRAMES << " for warmup):" << "load (wait+to_gpu): " << 
             timeLoad / float(count) << "optflow: " << timeOptFlow  / float(count)  <<
             "save: " << timeSave / float(count) << 
             "stabilize: " <<  timeStabilized / float(count) << 
@@ -143,7 +140,6 @@ bool StreamStabilizer::processOneFrame(int i) {
 
 
 bool StreamStabilizer::stabilizeAll() {
-    // std::thread decoding_thread(&TwoStreamDecoder::run, &videoDecode); // start video decoding in background
     startBackgroundThread();
     timer.start();
     for (int i = k;; i++) {
