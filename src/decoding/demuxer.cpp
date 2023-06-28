@@ -60,12 +60,7 @@ bool Demuxer::operator()(AVPacket& packet) {
 bool Demuxer::seek(const float position, const bool backward) {
   int64_t seek_target = static_cast<int64_t>(position * AV_TIME_BASE);
 
-  // return av_seek_frame(format_context_, -1, seek_target, backward ? AVSEEK_FLAG_BACKWARD : 0) >= 0;
-    // seek_target = av_rescale(seek_target, time_base().den, time_base().num);
-    // seek_target /= 1000;
-    // if (avformat_seek_file(format_context_, video_stream_index_, INT64_MIN, seek_target, INT64_MAX, 0) < 0) {
-    //SEEK
-    if (avformat_seek_file(format_context_, -1, 0, seek_target, INT64_MAX, 0) < 0) { //| AVSEEK_FLAG_FRAME | AVSEEK_FLAG_ANY
+    if (avformat_seek_file(format_context_, -1, 0, seek_target, INT64_MAX, 0) < 0) { 
         av_log(NULL, AV_LOG_ERROR, "ERROR av_seek_frame: %u\n", static_cast<unsigned int>(seek_target));
         return false;
     } else {
