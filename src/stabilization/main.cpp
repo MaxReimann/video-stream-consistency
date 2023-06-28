@@ -136,11 +136,6 @@ int main(int argc, char *argv[])
         return fs.stabilizeAll();
     } else {
         auto inputVideo = QDir(originalFrameDir);
-        // // check if input video exists and is file
-        // if (!inputVideo.exists()) {
-        //     std::cerr << "Input video does not exist." << std::endl;
-        //     return 1;
-        // }
         if (!QFileInfo(originalFrameDir).isFile()) {
             std::cerr << "Input video has to be a file." << std::endl;
             return 1;
