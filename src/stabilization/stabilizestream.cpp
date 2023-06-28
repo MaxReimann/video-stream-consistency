@@ -23,7 +23,7 @@
 
 StreamStabilizer::StreamStabilizer(QDir originalVidPath,  QDir processedVidPath, std::optional<QString> stabilizedDir, std::optional<QString> modelType, int width, int height, int batchSize, bool streamingOutput) : 
 VideoStabilizer(width, height, batchSize,  modelType, true), originalVidPath(originalVidPath), processedVidPath(processedVidPath), stabilizedDirorVid(stabilizedDir), streamingOutput(streamingOutput),
-videoDecode(TwoStreamDecoder(0.0, originalVidPath.absolutePath().toStdString(), processedVidPath.absolutePath().toStdString() )),
+videoDecode(TwoStreamDecoder(0.0, originalVidPath.absolutePath().toStdString(), processedVidPath.absolutePath().toStdString())),
 flowVis(GPUImage(width, height, 3))
  {
     qDebug() << originalVidPath.absolutePath();
@@ -59,7 +59,6 @@ bool StreamStabilizer::loadFrame(int i)
             std::cout << "[StreamStabilizer::loadFrame] Frame queue finished" << std::endl;
             return false;
         }
- 
     }
 
     if (frame_info == nullptr)

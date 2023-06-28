@@ -26,29 +26,10 @@ struct OrtTensorDimensions : std::vector<int64_t> {
     }
 };
 
-// struct BaseKernel {
-//     BaseKernel(OrtApi api) : api_(api), info_(nullptr), ort_(api_) { }
-//     BaseKernel(OrtApi api, const OrtKernelInfo* info) : api_(&api), info_(info), ort_(api_) { }
-//     BaseKernel(OrtApi api, const OrtKernelInfo* info, const char* provider)
-//         : api_(api)
-//         , info_(info)
-//         , ort_(api_)
-//         , provider_(provider)
-//     {
-//     }
-
-// protected:
-//     OrtApi *api_;  // keep a copy of the struct, whose ref is used in the ort_
-//     Ort::CustomOpApi ort_;
-//     const OrtKernelInfo* info_;
-//     const char* provider_;
-// };
-
 struct BaseKernel {
     BaseKernel(const OrtApi& api) : info_(nullptr), ort_(api) { }
     BaseKernel(const OrtApi& api, const OrtKernelInfo* info) : info_(info), ort_(api) { }
     BaseKernel(const OrtApi& api, const OrtKernelInfo* info, const char* provider)
-        // : api_(api)
         : info_(info)
         , ort_(api)
         , provider_(provider)
@@ -56,7 +37,6 @@ struct BaseKernel {
     }
 
 protected:
-    // OrtApi api_;  // keep a copy of the struct, whose ref is used in the ort_
     Ort::CustomOpApi ort_;
     const OrtKernelInfo* info_;
     const char* provider_;

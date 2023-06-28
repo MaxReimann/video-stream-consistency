@@ -20,11 +20,6 @@
 
 #include "IOInterface.h"
 
-// namespace pybind11 {
-// class dict;
-// class str;
-// }
-
 
 template <typename ValueType>
 class CpuIO : public IOInterface {

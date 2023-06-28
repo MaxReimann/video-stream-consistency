@@ -81,7 +81,6 @@ InferenceModelVariant::InferenceModelVariant(std::filesystem::path modelPath,
 {
     for (auto& [map, mappedIo] : inputs) {
         mInputs.emplace(map, InternalMappedIO{std::move(mappedIo.first), mappedIo.second, {}});
-        // mInputs.emplace(map, InternalMappedIO{std::move(mappedIo.first), std::move(mappedIo.second), {}});
     }
     mHasDynamicOutputShape = std::any_of(mOutputs.cbegin(), mOutputs.cend(), [](const auto& entry) {
       return entry.second.second->hasDynamicShape();
@@ -156,12 +155,8 @@ std::unique_ptr<Ort::Session> InferenceModelVariant::createSession(const std::fi
 
     RegisterCustomOps(sessionOptions, OrtGetApiBase());
 
-    // Ort::ArenaCfg arenaCfg{0, 0, 1024, -1};
     if (provider == InferenceProvider::CUDA) {
         OrtCUDAProviderOptions cudaOptions;
-        // cudaOptions.cudnn_conv_algo_search =  OrtCudnnConvAlgoSearch::OrtCudnnConvAlgoSearchHeuristic;
-        // cudaOptions.default_memory_arena_cfg = arenaCfg;
-
         sessionOptions.AppendExecutionProvider_CUDA(cudaOptions);
     }
 
@@ -283,7 +278,6 @@ void InferenceModelVariant::runStatic()
     inputNames.reserve(mInputs.size());
     for (auto& [map, mappedInput] : mInputs) {
         auto* rawInput = mappedInput.io.get();
-
         inputTensors.push_back(Ort::Value::CreateTensor(memoryInfo,
             rawInput->resourcePointer(),
             rawInput->byteSize(),
@@ -292,16 +286,6 @@ void InferenceModelVariant::runStatic()
             convertDataType(rawInput->dataType())));
         inputNames.push_back(mappedInput.id);
         io_binding.BindInput(mappedInput.id.c_str(), inputTensors.back());
-        
-        // // print name and shapes of raw input
-        // std::cout << "raw input name: " << mappedInput.id << std::endl;
-        // // print every value of rawInput->shape()
-        // std::cout << "raw input shape: ";
-        // for (auto& i : inputTensors.back().GetTensorTypeAndShapeInfo().GetShape()) {
-        //     std::cout << i << " ";
-        // }
-
-        // std::cout << std::endl;
     }
 
     std::vector<Ort::Value> outputTensors;
@@ -310,7 +294,6 @@ void InferenceModelVariant::runStatic()
     outputNames.reserve(mOutputs.size());
     for (auto& [map, mappedOutput] : mOutputs) {
         auto* rawOutput = mappedOutput.second.get();
-
         outputTensors.push_back(Ort::Value::CreateTensor(memoryInfo,
             rawOutput->resourcePointer(),
             rawOutput->byteSize(),

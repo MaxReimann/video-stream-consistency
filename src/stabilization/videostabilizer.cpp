@@ -241,7 +241,7 @@ bool VideoStabilizer::doOneStep(int currentFrame) {
         timeStabilized += timer.elapsed() - beforeWarp;
 
     auto beforeSave = timer.elapsed();
-    outputFrame(currentFrame, out); // output->save(stabilizedDir.filePath(formatIndex(i) + ".jpg"));
+    outputFrame(currentFrame, out); 
     auto afterSave = timer.elapsed();
 
     lastStabilizedFrame.copyFrom(consisOut);

@@ -19,8 +19,6 @@ QSharedPointer<GPUImage> imageToGPU(const QImage& image) {
     return gpuImage;
 }
 
-
-
 void cpyNImagesToBuffer(QList<QSharedPointer<QImage>>& images, int batchDim, std::vector<std::byte>& outBuffer) {
 
     if (images.size() < batchDim + 2) {

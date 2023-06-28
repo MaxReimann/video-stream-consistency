@@ -107,5 +107,4 @@ class VideoStabilizer {
         VideoStabilizer(int width, int height, int batchSize, std::optional<QString> modelType, bool computeFlow);
         bool doOneStep(int currentFrame);
         hyperParams *getHyperParams() { return &controlParameters;}
-        // QSharedPointer<QImage> doOneStep(int currentFrame);
 };

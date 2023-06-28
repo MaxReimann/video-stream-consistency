@@ -129,20 +129,20 @@ __global__ void kernel_adap_comb(GPUImageWrapper crntIn, GPUImageWrapper crntPr,
 
     for (int c = 0; c < 3; c++) {
 
-        //reading input values
+        //input values
         crnt_val_in = crntIn.read(ix, iy, c);
-
         prev_val_in = prevWarpIn.read(ix, iy, c);
         nxt_val_in  = nextWarpIn.read(ix, iy, c);
 
-        //reading per-frame processed values
-        crnt_val_pr = crntPr.read(ix, iy, c);
-
+        //per-frame processed values
+        crnt_val_pr = crntPr.read(ix, iy, c); 
         prev_val_pr = prevWarpPr.read(ix, iy, c);
         nxt_val_pr  = nextWarpPr.read(ix, iy, c);
 
+        // last stabilized warped
         last_stab_val = lastStabWarp.read(ix, iy, c);
 
+        // weights 
         wt_prv = expf(-alpha*(crnt_val_in - prev_val_in)*(crnt_val_in - prev_val_in));
         wt_nxt = expf(-alpha*(crnt_val_in - nxt_val_in)*(crnt_val_in - nxt_val_in));
 
@@ -193,9 +193,11 @@ __global__ void kernel_consist_wt(GPUImageWrapper crntIn, GPUImageWrapper adapCm
 __global__ void kernel_consist_out (GPUImageWrapper consisOut, GPUImageWrapper prevConsis, GPUImageWrapper prevUpdt, GPUImageWrapper crntPr, GPUImageWrapper prevStabWarp,
                                     GPUImageWrapper consWt, float stepSize, float momFac, int isMom)
 {
+    // Calculate thread x, y indices
     const int ix = __mul24(blockDim.x, blockIdx.x) + threadIdx.x;
     const int iy = __mul24(blockDim.y, blockIdx.y) + threadIdx.y;
 
+    // Check if thread indices are in valid range
     if (ix >= consisOut.width || iy >= consisOut.height || iy < 0 || ix < 0) {
         return;
     }
@@ -209,7 +211,7 @@ __global__ void kernel_consist_out (GPUImageWrapper consisOut, GPUImageWrapper p
         lap_pr  = 0.0f;
         lap_out = 0.0f;
 
-        //calculating laplacian of per-frame processed result and the consistent output
+        // Calculate Laplacian of per-frame processed result and the consistent output
         if ((ix + 1) < (crntPr.width - 1)) {
             lap_pr += crntPr.read((ix + 1), iy, c);
             lap_out += prevConsis.read((ix + 1), iy, c);
@@ -243,7 +245,7 @@ __global__ void kernel_consist_out (GPUImageWrapper consisOut, GPUImageWrapper p
 
         grad_val = tmp_2 - tmp_1;
 
-        // momentum, insert later again
+        // If momentum is used, compute output value with it
         if (isMom) {
             out_val = prevConsis.read(ix, iy, c) + stepSize*grad_val + momFac*prevUpdt.read(ix, iy, c);
         } else {
@@ -251,11 +253,10 @@ __global__ void kernel_consist_out (GPUImageWrapper consisOut, GPUImageWrapper p
         }
 
         prevUpdt.write(ix, iy, c, stepSize*grad_val);
-
         consisOut.write(ix, iy, c, out_val);
     }
-
 }
+
 //////////////////////////////////////// Funtion Calls ///////////////////////////////////////////////
 
 dim3 getGrid(dim3 n, dim3 block) {
@@ -273,8 +274,8 @@ void perform_consistency(
         GPUImage& flowFwd,
         GPUImage& flowBwd,
         GPUImage& stabilizedPrev,
-        GPUImage& stabilizedOut) {
-
+        GPUImage& stabilizedOut) 
+{
     dim3 n(stabilizedOut.width, stabilizedOut.height, 1); // number of items to process
     dim3 block(32, 32, 1); // number of items each thread gets
     dim3 grid = getGrid(n, block);
@@ -286,9 +287,10 @@ void perform_consistency(
 
 void get_bilinear(
         GPUImage& input,
-        GPUImage& output) {
-    dim3 n(output.width, output.height, 1); // number of items to process
-    dim3 block(32, 32, 1); // number of items each thread gets
+        GPUImage& output) 
+{
+    dim3 n(output.width, output.height, 1);
+    dim3 block(32, 32, 1); 
     dim3 grid = getGrid(n, block);
     kernel_bilinear<<<grid, block>>>(CUDA(input), CUDA(output));
     checkError("kernel_bilinear");
@@ -298,11 +300,10 @@ void get_bilinear(
 
 void get_warp_result(
         GPUImage& input,
-        GPUImage& flow, //this flow whould be that which warps the current frame to the given "input"
+        GPUImage& flow, //warps the current frame to the given input
         GPUImage& inputWarp){
-
-    dim3 n(input.width, input.height, 1); // number of items to process
-    dim3 block(32, 32, 1); // number of items each thread gets
+    dim3 n(input.width, input.height, 1); 
+    dim3 block(32, 32, 1); 
     dim3 grid = getGrid(n, block);
     kernel_warp<<<grid, block>>>(CUDA(input), CUDA(flow), CUDA(inputWarp));
     checkError("kernel_warp");
@@ -320,18 +321,15 @@ void get_adap_comb(
         GPUImage& adapCmbIn,
         GPUImage& adapCmbPr,
         GPUImage& lastStabWarp,
-        float alpha){
-
-
+        float alpha)
+{
     dim3 n(crntIn.width, crntIn.height, 1); // number of items to process
     dim3 block(32, 32, 1); // number of items each thread gets
     dim3 grid = getGrid(n, block);
     kernel_adap_comb<<<grid, block>>>(CUDA(crntIn), CUDA(crntPr), CUDA(prevWarpIn), CUDA(prevWarpPr), CUDA(nextWarpIn), CUDA(nextWarpPr),
                                       CUDA(adapCmbIn), CUDA(adapCmbPr), CUDA(lastStabWarp), alpha);
     checkError("kernel_adap_comb");
-
     cudaDeviceSynchronize();
-
 }
 
 void get_consist_wt(
@@ -340,7 +338,6 @@ void get_consist_wt(
         GPUImage& consisWt,
         float  beta,
         float gamma){
-
     dim3 n(crntIn.width, crntIn.height, 1); // number of items to process
     dim3 block(32, 32, 1); // number of items each thread gets
     dim3 grid = getGrid(n, block);
@@ -357,9 +354,8 @@ void get_consist_out(
         int numIter,
         float stepSize,
         float momFac,
-        GPUImage& consisOut){
-
-
+        GPUImage& consisOut)
+{
     dim3 n(consisOut.width, consisOut.height, 1); // number of items to process
     dim3 block(32, 32, 1); // number of items each thread gets
     dim3 grid = getGrid(n, block);

@@ -9,12 +9,6 @@
 
 VideoFilterer::VideoFilterer(const Demuxer* demuxer, const VideoDecoder* video_decoder) : filter_graph_(avfilter_graph_alloc()) {
   std::vector<std::string> filters;
-
-  // see FFmpeg documentation for more info on video filters
-  //
-  // filters.push_back("format=gray");
-  // filters.push_back("yadif");
-
   if (demuxer->rotation() == 90) {
     filters.push_back("transpose=clock");
   } else if (demuxer->rotation() == 270) {

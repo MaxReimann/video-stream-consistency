@@ -31,7 +31,12 @@
 #include <QList>
 #include <QElapsedTimer>
 
-FileStabilizer::FileStabilizer(QDir originalFrameDir, QDir processedFrameDir, QDir stabilizedFrameDir, std::optional<QDir> opticalFlowDir,  std::optional<QString> modelType, int width, int height, int batchSize, bool computeOpticalFlow) : VideoStabilizer(width, height, batchSize,  modelType, computeOpticalFlow), originalFrameDir(originalFrameDir), processedFrameDir(processedFrameDir), stabilizedFrameDir(stabilizedFrameDir), opticalFlowDir(opticalFlowDir)
+#define WARMUP_FRAMES (k+5)
+
+FileStabilizer::FileStabilizer(QDir originalFrameDir, QDir processedFrameDir, QDir stabilizedFrameDir, std::optional<QDir> opticalFlowDir,  
+    std::optional<QString> modelType, int width, int height, int batchSize, bool computeOpticalFlow) : 
+    VideoStabilizer(width, height, batchSize,  modelType, computeOpticalFlow), originalFrameDir(originalFrameDir), 
+    processedFrameDir(processedFrameDir), stabilizedFrameDir(stabilizedFrameDir), opticalFlowDir(opticalFlowDir)
 {
     qDebug() << originalFrameDir.absolutePath();
     if (!originalFrameDir.exists()) {
@@ -97,15 +102,13 @@ bool FileStabilizer::stabilizeAll() {
             break;
         }
 
-        if (i == 105) {
-            int count = i - (k+5);
+        if (i == 100+WARMUP_FRAMES) {
+            int count = i - WARMUP_FRAMES;
             qDebug() << "Per-frame time in ms averaged over 100 frames (without first 5 for warmup):" << "load (wait+to_gpu): " << 
                 timeLoad / float(count) << "optflow: " << timeOptFlow  / float(count)  <<
                 "save: " << timeSave / float(count) << 
                 "stabilize: " <<  timeStabilized / float(count) << 
                 "overall: " << (timeLoad + timeOptFlow + timeStabilized + timeSave) / float(count);
-            // videoDecode.get_video_control()->set_quit(true);
-            // break;
         }
     }
     return true;
