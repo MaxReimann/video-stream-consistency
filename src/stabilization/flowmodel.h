@@ -6,9 +6,6 @@
 
 #include <inference/OrtContext.h>
 #include <inference/InferenceModelVariant.h>
-// #include <nmp/PythonContext.h>
-// #include <nmp/Model.h>
-// #include <nmp/model/ImageArrayIOHelper.h>
 
 struct flowTiming
 {
@@ -21,14 +18,12 @@ class FlowModel
 private:
     std::unique_ptr<InferenceModelVariant> model;
     std::unique_ptr<InferenceModelVariant> flowvismodel;
-    // std::vector<std::unique_ptr<IOInterface>> nmpInputImages;
-    std::vector<std::shared_ptr<IOInterface>> nmpInputImages;
+    std::vector<std::shared_ptr<IOInterface>> inputImages;
     std::vector<std::shared_ptr<IOInterface>> adjustedWidthHeight;
     std::shared_ptr<IOInterface> outputFlow;
     std::shared_ptr<IOInterface> flowVis;
     QElapsedTimer timer;
     OrtContext* _ort_context;
-    // PythonContext* _python_context;
     int batchSize;
     int width;
     int height;
