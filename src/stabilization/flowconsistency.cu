@@ -1,6 +1,6 @@
 /*  The CUDA kernels for flow-based temporal consistency
 
-    Copyright (C) 2023 Sumit Shekhar (sumit.shekhar@hpi.de)
+    Copyright (C) 2023 Moritz Hilscher and Sumit Shekhar (sumit.shekhar@hpi.de)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,7 +48,6 @@ __global__ void kernel_average_frames(GPUImageWrapper frame1, GPUImageWrapper fr
 }
 
 __global__ void kernel_bilinear(GPUImageWrapper input, GPUImageWrapper output) {
-    // ix/y are output image coordinates
     const int ox = __mul24(blockDim.x, blockIdx.x) + threadIdx.x;
     const int oy = __mul24(blockDim.y, blockIdx.y) + threadIdx.y;
 
@@ -109,19 +108,8 @@ __global__ void kernel_warp(GPUImageWrapper input, GPUImageWrapper flow, GPUImag
         tmp_2 = input.read(map_ix , map_iy + 1, c)*(1.0f - flo_fx) + input.read(map_ix + 1, map_iy + 1, c)*flo_fx;
 
         out_val = tmp_1*(1.0f - flo_fy) + tmp_2*flo_fy;
-        //out_val = input.read(map_ix, map_iy, c);
 
         input_warp.write(ix, iy, c, out_val);
-
-        // check if fractional parts are within 0 and 1
-        /*
-        if (flo_fx < 0.0 || flo_fy < 0.0) {
-            input_warp.write(ix, iy, c, c == 0 ? 1.0 : 0.0);
-        }
-        if (flo_fx > 1.0 || flo_fy > 1.0) {
-            input_warp.write(ix, iy, c, c == 2 ? 1.0 : 0.0);
-        }
-        */
     }
 }
 
@@ -160,40 +148,24 @@ __global__ void kernel_adap_comb(GPUImageWrapper crntIn, GPUImageWrapper crntPr,
 
         //global-backward and local-forward consistency
         if(wt_prv > 0.45f) wt_prv = 0.45f; // a higher value of wt_prv increase stability. however for fast motions it also results in ghosting artifacts.
-        if(wt_nxt > 0.3f) wt_nxt = 0.3f; // just reducing this does noit help much
+        if(wt_nxt > 0.3f) wt_nxt = 0.3f; 
 
         if(wt_prv < 0.001f) wt_prv = 0.0f; // low floating-point clamping
         if(wt_nxt < 0.001f) wt_nxt = 0.0f; // low floating-point clamping
 
-
-
         //adaptive combined values
-
-        //adp_val_in = (prev_val_in + nxt_val_in)/2.0f;
         adp_val_in = wt_prv*prev_val_in + wt_nxt*nxt_val_in + (1.0f - (wt_prv + wt_nxt))*crnt_val_in;
-        //adp_val_in = wt_prv*prev_val_in + (1.0f - wt_prv)*crnt_val_in;
-
-        //global-backward and local-forward consistency
-        //adp_val_pr = wt_prv*last_stab_val + wt_nxt*nxt_val_pr + (1.0f - (wt_prv + wt_nxt))*crnt_val_pr;
 
         //local-backward and local-forward consistency
         adp_val_pr = wt_prv*prev_val_pr + wt_nxt*nxt_val_pr + (1.0f - (wt_prv + wt_nxt))*crnt_val_pr;
-
-        //adp_val_pr = wt_prv*last_stab_val + (1.0f - wt_prv)*crnt_val_pr; // if I just do this with wt_prv = 0.5, output is way less consistent.
-        adp_val_pr = wt_prv*last_stab_val + (1.0f - wt_prv)*adp_val_pr; //computing adap_pr and then further adding "last_stab_val" makes things more consistent.
-        // majority of consistency comes from "last_stab_val". however adding "adp_val_pr" make things robust w.r.t optimization solving and even few iterations
-        // gives desirable results instead of solving the optimization completely.
-
+        adp_val_pr = wt_prv*last_stab_val + (1.0f - wt_prv)*adp_val_pr;
 
         adapCmbIn.write(ix, iy, c, adp_val_in);
         adapCmbPr.write(ix, iy, c, adp_val_pr);
     }
-
-
 }
 
 __global__ void kernel_consist_wt(GPUImageWrapper crntIn, GPUImageWrapper adapCmbIn, GPUImageWrapper consisWt, float beta, float gamma){
-
     const int ix = __mul24(blockDim.x, blockIdx.x) + threadIdx.x;
     const int iy = __mul24(blockDim.y, blockIdx.y) + threadIdx.y;
 
@@ -201,19 +173,19 @@ __global__ void kernel_consist_wt(GPUImageWrapper crntIn, GPUImageWrapper adapCm
         return;
     }
 
-
-    float crnt_val, adp_cmb_val, wt_val;
     for (int c = 0; c < 3; c++) {
+        float crnt_val    = crntIn.read(ix, iy, c);
+        float adp_cmb_val = adapCmbIn.read(ix, iy, c);
 
-        crnt_val    = crntIn.read(ix, iy, c);
-        adp_cmb_val = adapCmbIn.read(ix, iy, c);
-        wt_val = gamma*expf(-beta*(crnt_val - adp_cmb_val)*(crnt_val - adp_cmb_val));
+        // Calculate the weight value
+        float wt_val = gamma * expf(-beta * (crnt_val - adp_cmb_val) * (crnt_val - adp_cmb_val));
 
-        if(wt_val < 0.001f) wt_val = 0.0f; // low floating-point clamping
-
+        // Clamp very small values to zero to avoid precision issues
+        if(wt_val < 0.001f) {
+            wt_val = 0.0f;
+        }
 
         consisWt.write(ix, iy, c, wt_val);
-
     }
 
 }
@@ -244,7 +216,6 @@ __global__ void kernel_consist_out (GPUImageWrapper consisOut, GPUImageWrapper p
             cnt += 1;
         }
 
-
         if ((ix - 1) >= 0) {
             lap_pr += crntPr.read((ix - 1), iy, c);
             lap_out += prevConsis.read((ix - 1), iy, c);
@@ -265,20 +236,7 @@ __global__ void kernel_consist_out (GPUImageWrapper consisOut, GPUImageWrapper p
         lap_pr  -= cnt * crntPr.read(ix, iy, c);
         lap_out -= cnt * prevConsis.read(ix, iy, c);
 
-        // check if laplacian calculation makes sense - does
-        //lap_out = prevConsis.read(ix, iy, c);
-        /*
-        if (ix > 1 && ix < crntPr.width-1) {
-            lap_out = (prevConsis.read((ix + 1), iy, c) - prevConsis.read((ix - 1), iy, c)) * 10.0;
-        } else {
-            lap_out = 0.0;
-        }
-        */
-
-        // fix weight to 1.0 for now
         wt_val = consWt.read(ix, iy, c);
-
-
 
         tmp_1 = wt_val*(prevConsis.read(ix, iy, c) - prevStabWarp.read(ix, iy, c));
         tmp_2 = lap_out - lap_pr;
@@ -286,19 +244,15 @@ __global__ void kernel_consist_out (GPUImageWrapper consisOut, GPUImageWrapper p
         grad_val = tmp_2 - tmp_1;
 
         // momentum, insert later again
-        if (isMom)
-        {
+        if (isMom) {
             out_val = prevConsis.read(ix, iy, c) + stepSize*grad_val + momFac*prevUpdt.read(ix, iy, c);
-        }
-        else
-        {
+        } else {
             out_val = prevConsis.read(ix, iy, c) + stepSize*grad_val;
         }
 
         prevUpdt.write(ix, iy, c, stepSize*grad_val);
 
         consisOut.write(ix, iy, c, out_val);
-
     }
 
 }
@@ -321,10 +275,6 @@ void perform_consistency(
         GPUImage& stabilizedPrev,
         GPUImage& stabilizedOut) {
 
-    // TODO sumit, your cuda implementation here
-    // have a look at the example kernel and how I pass the data
-    // stabilizedOut should contain the result
-
     dim3 n(stabilizedOut.width, stabilizedOut.height, 1); // number of items to process
     dim3 block(32, 32, 1); // number of items each thread gets
     dim3 grid = getGrid(n, block);
@@ -337,8 +287,6 @@ void perform_consistency(
 void get_bilinear(
         GPUImage& input,
         GPUImage& output) {
-    //std::cout << input.width << "x" << input.height << "x" << input.channels << " -> "
-    //          << output.width << "x" << output.height << "x" << output.channels << std::endl;
     dim3 n(output.width, output.height, 1); // number of items to process
     dim3 block(32, 32, 1); // number of items each thread gets
     dim3 grid = getGrid(n, block);
@@ -372,8 +320,7 @@ void get_adap_comb(
         GPUImage& adapCmbIn,
         GPUImage& adapCmbPr,
         GPUImage& lastStabWarp,
-        float alpha
-        ){
+        float alpha){
 
 
     dim3 n(crntIn.width, crntIn.height, 1); // number of items to process
@@ -423,18 +370,10 @@ void get_consist_out(
 
     for (int k = 0; k < numIter; k++)
     {
-        // don't read and write simultaneously to one texture
-        //prevConsis.copyFrom(consisOut);
-        //cudaDeviceSynchronize();
         // Using Stochastic Gradient Descent (SGD) for optimization solving
-        // second parameter used to be prevConsis with which we prevented simultaneous reading/writing same texture
-        // -> but doesn't seem to be issue, and additional synchronization makes it reeeally slow. leave out for now
         kernel_consist_out <<< grid, block >>>(CUDA(consisOut), CUDA(consisOut), CUDA(prevUpdt), CUDA(crntPr), CUDA(prevStabWarp), CUDA(consWt), stepSize, momFac, k);
         checkError("kernel_consist_out");
-        //cudaDeviceSynchronize();
     }
-    //kernel_consist_wt<<<grid, block>>>(CUDA(crntPr), CUDA(prevStabWarp), CUDA(consWt), CUDA(consisOut));
-
     cudaDeviceSynchronize();
 }
 
