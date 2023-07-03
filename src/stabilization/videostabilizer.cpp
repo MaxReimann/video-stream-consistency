@@ -256,7 +256,7 @@ bool VideoStabilizer::doOneStep(int currentFrame) {
         outputFinalFrames(currentFrame);
         return false;
     }
-    if (currentFrame > FRAME_TIMER_START) {
+    if (currentFrame > WARMUP_FRAMES) {
         timeLoad += timer.elapsed() - beforeLoad;
         timeSave += afterSave - beforeSave;
     }
