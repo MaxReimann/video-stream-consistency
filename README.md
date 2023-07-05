@@ -72,10 +72,13 @@ Code tested under linux 20.04, should work under windows as well.
 
 ## Citation
 ```
-@article{shekhar2023consistency,
-  author    = {Shekhar, Sumit and Reimann, Max and Hilscher, Moritz and Semmo, Amir and Döllner, Jürgen and Trapp, Matthias},
-  title     = {Interactive Control over Temporal Consistency while Stylizing Video Streams},
-  journal   = {Computer Graphics Forum},
-  year      = {2023},
+@article {10.1111:cgf.14891,
+  journal = {Computer Graphics Forum},
+  title = {{Interactive Control over Temporal Consistency while Stylizing Video Streams}},
+  author = {Shekhar, Sumit and Reimann, Max and Hilscher, Moritz and Semmo, Amir and Döllner, Jürgen and Trapp, Matthias},
+  year = {2023},
+  publisher = {The Eurographics Association and John Wiley & Sons Ltd.},
+  ISSN = {1467-8659},
+  DOI = {10.1111/cgf.14891}
 }
 ```
