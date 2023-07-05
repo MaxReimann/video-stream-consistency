@@ -19,7 +19,7 @@ Official Implementation of:<br/>
 **"Interactive Control over Temporal Consistency while Stylizing Video Streams"** <br/> 
 Sumit Shekhar*, Max Reimann*, Moritz Hilscher, Amir Semmo, Jürgen Döllner, Matthias Trapp<br/> 
 *equal contribution<br/> 
-in CGF Journal (EGSR Special Edition), 2023
+in Computer Graphics Forum (EGSR Special Edition), 2023
 
 ## Installation
 Requires CUDA (11.4+) and QT 5.11+ 
