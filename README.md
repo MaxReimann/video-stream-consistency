@@ -67,8 +67,16 @@ Start FlowVideoConsistencyPlayer GUI:
 To use the fast setting (i.e. downscale flow computation), an environment variable FLOWDOWNSCALE can be set.
 I.e., to downscale by 2x (a recommended factor when processing full-HD), set `FLOWDOWNSCALE=2 ./FlowVideoConsistencyPlayer`.
 
-Original pytorchs models and conversion code are found in model-conversion/.
-Code tested under linux 20.04, should work under windows as well.
+## Code structure
+- `model-conversion` contains our trained pytorch models and onnx conversion and testing code.
+- `src/decoding` contains libav/ffmpeg handling to decode two concurrent streams into Qt images
+- `src/gui` contains the Qt-based VideoPlayer GUI
+- `src/inference` contains wrapper code for onnxruntime models
+- `src/ort_custom_ops` contains our CPU and CUDA onnxruntime custom ops for the correlation and warping kernels
+- `src/stabilization` contains the stabilization routines, as well as flow loading/flow model execution as well as various helpers
+
+
+Code was tested under linux 20.04 and should work under windows as well.
 
 ## Citation
 ```
