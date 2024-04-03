@@ -34,7 +34,7 @@ flowVis(GPUImage(width, height, 3))
         throw std::runtime_error("Processed vid does not exist!");
     }
 
-    if (!QFileInfo(*stabilizedDirorVid).isDir()) {
+    if (!streamingOutput && !QFileInfo(*stabilizedDirorVid).isDir()) {
        videoEncoder = std::make_unique<VideoEncoder>(originalVidPath.absolutePath().toStdString(), stabilizedDirorVid->toStdString());
     }
 }
