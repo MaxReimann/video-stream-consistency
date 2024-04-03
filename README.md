@@ -19,7 +19,7 @@ Official Implementation of:<br/>
 **"Interactive Control over Temporal Consistency while Stylizing Video Streams"** <br/> 
 Sumit Shekhar*, Max Reimann*, Moritz Hilscher, Amir Semmo, Jürgen Döllner, Matthias Trapp<br/> 
 *equal contribution<br/> 
-in CGF Journal (EGSR Special Edition), 2023
+in Computer Graphics Forum (EGSR Special Edition), 2023
 
 ## Installation
 Requires CUDA (11.4+) and QT 5.11+ 
@@ -67,15 +67,26 @@ Start FlowVideoConsistencyPlayer GUI:
 To use the fast setting (i.e. downscale flow computation), an environment variable FLOWDOWNSCALE can be set.
 I.e., to downscale by 2x (a recommended factor when processing full-HD), set `FLOWDOWNSCALE=2 ./FlowVideoConsistencyPlayer`.
 
-Original pytorchs models and conversion code are found in model-conversion/.
-Code tested under linux 20.04, should work under windows as well.
+## Code structure
+- `model-conversion` contains our trained pytorch models and onnx conversion and testing code.
+- `src/decoding` contains libav/ffmpeg handling to decode two concurrent streams into Qt images
+- `src/gui` contains the Qt-based VideoPlayer GUI
+- `src/inference` contains wrapper code for onnxruntime models
+- `src/ort_custom_ops` contains our CPU and CUDA onnxruntime custom ops for the correlation and warping kernels
+- `src/stabilization` contains the stabilization routines, as well as flow loading/flow model execution as well as various helpers
+
+
+Code was tested under linux 20.04 and should work under windows as well.
 
 ## Citation
 ```
-@article{shekhar2023consistency,
-  author    = {Shekhar, Sumit and Reimann, Max and Hilscher, Moritz and Semmo, Amir and Döllner, Jürgen and Trapp, Matthias},
-  title     = {Interactive Control over Temporal Consistency while Stylizing Video Streams},
-  journal   = {Computer Graphics Forum},
-  year      = {2023},
+@article {10.1111:cgf.14891,
+  journal = {Computer Graphics Forum},
+  title = {{Interactive Control over Temporal Consistency while Stylizing Video Streams}},
+  author = {Shekhar, Sumit and Reimann, Max and Hilscher, Moritz and Semmo, Amir and Döllner, Jürgen and Trapp, Matthias},
+  year = {2023},
+  publisher = {The Eurographics Association and John Wiley & Sons Ltd.},
+  ISSN = {1467-8659},
+  DOI = {10.1111/cgf.14891}
 }
 ```
