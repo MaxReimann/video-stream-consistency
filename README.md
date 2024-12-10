@@ -7,7 +7,7 @@ https://github.com/MaxReimann/video-stream-consistency/assets/5698958/c4567551-0
 
 
 
-### [Project Page](https://maxreimann.github.io/stream-consistency/) | [Paper](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14891) | [ArXiv](https://arxiv.org/abs/2301.00750) 
+### [Project Page](https://maxreimann.github.io/stream-consistency/) | [CGF Paper](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14891) | [ArXiv](https://arxiv.org/abs/2301.00750) 
 
 Blind video consistency produces temporally consistent videos from per-frame processed/stylized inputs without knowledge of the applied processing methods. 
 
@@ -22,13 +22,14 @@ Sumit Shekhar*, Max Reimann*, Moritz Hilscher, Amir Semmo, Jürgen Döllner, Mat
 in Computer Graphics Forum (EGSR Special Edition), 2023
 
 ## Installation
-Requires CUDA 12+ and QT 5.11+ 
-Furthermore, also ffmpeg/libav needs to be installed. 
-If you are using windows, a precompiled version will automatically downloaded during the build process.
-If you are using linux, either install the dev libraries via packages: `apt install ffmpeg`, or via source, the project has been tested with ffmpeg5 but should also work with other versions. If installed via source make sure to build shared libraries and enable x264 library support.
+Requires CUDA 12+ and QT 5.11+, and ffmpeg/libav needs to be installed. 
+- If you are using windows, a precompiled of version of ffmpeg5.1 will automatically downloaded during the build process.
+- If you are using linux, either install the dev libraries via packages: `apt install ffmpeg`, or via source, the project has been tested with ffmpeg4 and ffmpeg5. If building ffmpeg from source make sure to enable shared libraries and x264 library support during ffmpeg configure; the shared libs are found via pkg-configure so make sure they are findeable in the path or ld_library_path
 
-To install, simply run the cmake (preferrably in a directory "build"), CMake will automatically download a CUDA-enabled build of ONNXRuntime. 
-In the current version CUDA12-based ONNXRuntime 1.20 is installed, the last working version using CUDA11-based ONNXRuntime 1.13 was commit [07f4df](https://github.com/MaxReimann/video-stream-consistency/commit/571f62bb4321c3cf286df50916eead664307f4df)
+To configure, create a directory build and run Cmake there (`cmake ..`). <br/> 
+CMake will automatically download a CUDA-enabled build of ONNXRuntime. 
+In the current version CUDA12-based ONNXRuntime 1.20 is installed, the last working version using CUDA11-based ONNXRuntime 1.13 was commit [07f4df](https://github.com/MaxReimann/video-stream-consistency/commit/571f62bb4321c3cf286df50916eead664307f4df). <br/> 
+Then build with the tool of your choice, e.g., using cmake in the build directory, run `cmake --build .`
 
 After building, two binaries are found in the build directory:
 `FlowVideoConsistency` is the CLI-based application for processing videos to file, `FlowVideoConsistencyPlayer` the interactive GUI application for live-viewing.
@@ -55,7 +56,7 @@ Frames must be of format `123456.png` and start with index 1 (mirroring ffmpeg f
 
 Process input videos, write frames: 
 ```
-Usage: ./FlowVideoConsistency -c pwcnet-light test/input.mp4  test/processed.mp4 test/output
+Usage: ./FlowVideoConsistency -c pwcnet-light ../videos/input.mp4  ../videos/processed.mp4 videos/output
 ```
 
 Process input videos, directly encode output video: 
