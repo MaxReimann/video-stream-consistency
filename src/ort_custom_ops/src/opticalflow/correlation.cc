@@ -44,14 +44,15 @@ void correlation_forward(const T*,
 
 void CorrelationKernel::ComputeCPU(OrtKernelContext* context)
 {
-    const OrtValue* input1 = ort_.KernelContext_GetInput(context, 0);
-    const OrtValue* input2 = ort_.KernelContext_GetInput(context, 1);
 
-    OrtTensorTypeAndShapeInfo* input_X_info = ort_.GetTensorTypeAndShape(input1);
-    ONNXTensorElementDataType input_X_type = ort_.GetTensorElementType(input_X_info);
-    ort_.ReleaseTensorTypeAndShapeInfo(input_X_info);
+    Ort::KernelContext ort_context{context};
+    Ort::ConstValue input1 = ort_context.GetInput(0);
+    Ort::ConstValue input2 = ort_context.GetInput(1);
+    Ort::TensorTypeAndShapeInfo input_X_info = input1.GetTensorTypeAndShapeInfo();
+    ONNXTensorElementDataType input_X_type = input_X_info.GetElementType();
 
-    OrtTensorDimensions dimensions(ort_, input1);
+    // OrtTensorDimensions dimensions(ort_, input1);
+    std::vector<int64_t> dimensions = input_X_info.GetShape();
     const int64_t N = dimensions[0];
     const int64_t C = dimensions[1];
     const int64_t iH = dimensions[2];
@@ -82,13 +83,15 @@ void CorrelationKernel::ComputeCPU(OrtKernelContext* context)
     const auto oW = (iW + 2 * padW - dilatedKW) / dW + 1;
 
     std::vector<int64_t> output_dims = {N, patchH, patchW, oH, oW};
-    OrtValue* output = ort_.KernelContext_GetOutput(context, 0, output_dims.data(), output_dims.size());
+    auto output = ort_context.GetOutput(0, output_dims.data(), output_dims.size());
+
 
     switch (input_X_type) {
         case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
-            correlation_forward(ort_.GetTensorData<float>(input1),
-                ort_.GetTensorData<float>(input2),
-                ort_.GetTensorMutableData<float>(output),
+            correlation_forward(
+                input1.GetTensorData<float>(),
+                input2.GetTensorData<float>(),
+                output.GetTensorMutableData<float>(),
                 correlate_fast,
                 N,
                 C,
@@ -110,9 +113,10 @@ void CorrelationKernel::ComputeCPU(OrtKernelContext* context)
                 oW);
             break;
         case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE:
-            correlation_forward(ort_.GetTensorData<double>(input1),
-                ort_.GetTensorData<double>(input2),
-                ort_.GetTensorMutableData<double>(output),
+            correlation_forward(
+                input1.GetTensorData<double>(),
+                input2.GetTensorData<double>(),
+                output.GetTensorMutableData<double>(),
                 correlate_fast,
                 N,
                 C,

@@ -17,11 +17,8 @@ const char* kCPUProvider = "CPUExecutionProvider";
 
 OrtStatus* ORT_API_CALL addCustomOps(const OrtApi* ortApi, OrtCustomOpDomain* domain)
 {
-    int len;
-    char** providers;
-    ortApi->GetAvailableProviders(&providers, &len);
-    std::vector<std::string> executors(providers, providers + len);
-    ortApi->ReleaseAvailableProviders(providers, len);
+    std::vector<std::string> executors =  Ort::GetAvailableProviders();
+    
 
     auto contains_executor = [&](std::string key) {
         return std::find(executors.begin(), executors.end(), key) != executors.end();

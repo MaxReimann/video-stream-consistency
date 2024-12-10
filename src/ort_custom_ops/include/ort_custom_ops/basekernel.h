@@ -9,22 +9,6 @@
 #include <onnxruntime_cxx_api.h>
 #endif
 
-struct OrtTensorDimensions : std::vector<int64_t> {
-    OrtTensorDimensions(Ort::CustomOpApi ort, const OrtValue* value)
-    {
-        OrtTensorTypeAndShapeInfo* info = ort.GetTensorTypeAndShape(value);
-        std::vector<int64_t>::operator=(ort.GetTensorShape(info));
-        ort.ReleaseTensorTypeAndShapeInfo(info);
-    }
-    const std::vector<int64_t>& GetDims() const { return *this; }
-    int64_t Size() const
-    {
-        int64_t s = 1.;
-        for (auto it = begin(); it != end(); ++it)
-            s *= *it;
-        return s;
-    }
-};
 
 struct BaseKernel {
     BaseKernel(const OrtApi& api) : info_(nullptr), ort_(api) { }
@@ -37,7 +21,7 @@ struct BaseKernel {
     }
 
 protected:
-    Ort::CustomOpApi ort_;
+    OrtApi ort_;
     const OrtKernelInfo* info_;
     const char* provider_;
 };

@@ -13,8 +13,23 @@ public:
         : BaseKernel(api, info, provider)
     {
         // obtain attribute from onnx node
-        use_legacy_corr_ = ort_.KernelInfoGetAttribute<int64_t>(info, "legacy");
-        max_displacement_ = ort_.KernelInfoGetAttribute<int64_t>(info, "max_displacement");
+        // use_legacy_corr_ = ort_.KernelInfoGetAttribute<int64_t>(info, "legacy");
+        // max_displacement_ = ort_.KernelInfoGetAttribute<int64_t>(info, "max_displacement");
+        
+        int64_t legacy;
+        OrtStatusPtr err = ort_.KernelInfoGetAttribute_int64(info, "legacy", &legacy);
+        Ort::Status status(err);
+        if (!status.IsOK()) {
+            throw std::runtime_error("Error reading attribute 'legacy', with error: " + status.GetErrorMessage());
+        }
+        this->use_legacy_corr_ = legacy;
+
+        err = ort_.KernelInfoGetAttribute_int64(info, "max_displacement", &(this->max_displacement_));
+        Ort::Status status2(err);
+        if (!status2.IsOK()) {
+            throw std::runtime_error("Error reading attribute 'max_displacement', with error: " + status2.GetErrorMessage());
+        }
+
     }
 
     void Compute(OrtKernelContext* context)
@@ -39,7 +54,7 @@ protected:
     void ComputeCUDA(OrtKernelContext* context);
 
     bool use_legacy_corr_;
-    int max_displacement_;
+    int64_t max_displacement_;
 };
 
 struct FlowCorrelationCustomOp : Ort::CustomOpBase<FlowCorrelationCustomOp, CorrelationKernel> {

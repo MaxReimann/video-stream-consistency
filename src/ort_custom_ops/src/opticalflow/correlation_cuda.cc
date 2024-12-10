@@ -28,18 +28,19 @@ void correlation_cuda_forward(const T*, const T*, T*, int, int, int, int, int, i
 
 void CorrelationKernel::ComputeCUDA(OrtKernelContext* context)
 {
-    const OrtValue* input1 = ort_.KernelContext_GetInput(context, 0);
-    const OrtValue* input2 = ort_.KernelContext_GetInput(context, 1);
+    Ort::KernelContext ort_context{context};
+    Ort::ConstValue input1 = ort_context.GetInput(0);
+    Ort::ConstValue input2 = ort_context.GetInput(1);
+    Ort::TensorTypeAndShapeInfo input_X_info = input1.GetTensorTypeAndShapeInfo();
+    ONNXTensorElementDataType input_X_type = input_X_info.GetElementType();
 
-    OrtTensorTypeAndShapeInfo* input_X_info = ort_.GetTensorTypeAndShape(input1);
-    ONNXTensorElementDataType input_X_type = ort_.GetTensorElementType(input_X_info);
-    ort_.ReleaseTensorTypeAndShapeInfo(input_X_info);
-
-    OrtTensorDimensions dimensions(ort_, input1);
+    // OrtTensorDimensions dimensions(ort_, input1);
+    std::vector<int64_t> dimensions = input_X_info.GetShape();
     const int64_t N = dimensions[0];
     const int64_t C = dimensions[1];
     const int64_t iH = dimensions[2];
     const int64_t iW = dimensions[3];
+    
     // std::cout << " dims" << " N: " << N << " C: " << C << " H: " << iH << " W: " << iW << std::endl;
 
     // should be passed in, for future kernels
@@ -73,16 +74,17 @@ void CorrelationKernel::ComputeCUDA(OrtKernelContext* context)
         output_dims = {N, patchH, patchW, oH, oW};
     }
 
-    OrtValue* output = ort_.KernelContext_GetOutput(context, 0, output_dims.data(), output_dims.size());
+    auto output = ort_context.GetOutput(0, output_dims.data(), output_dims.size());
 
     // important to get current computestream, otherwise, on repeated executions corrupted data will be silently read
-    auto compute_stream = reinterpret_cast<cudaStream_t>(ort_.KernelContext_GetGPUComputeStream(context));
+    auto compute_stream = reinterpret_cast<cudaStream_t>(ort_context.GetGPUComputeStream());
 
     switch (input_X_type) {
         case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
-            correlation_cuda_forward(ort_.GetTensorData<float>(input1),
-                ort_.GetTensorData<float>(input2),
-                ort_.GetTensorMutableData<float>(output),
+            correlation_cuda_forward(
+                input1.GetTensorData<float>(),
+                input2.GetTensorData<float>(),
+                output.GetTensorMutableData<float>(),
                 N,
                 C,
                 iH,
@@ -105,9 +107,10 @@ void CorrelationKernel::ComputeCUDA(OrtKernelContext* context)
                 compute_stream);
             break;
         case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE:
-            correlation_cuda_forward(ort_.GetTensorData<double>(input1),
-                ort_.GetTensorData<double>(input2),
-                ort_.GetTensorMutableData<double>(output),
+            correlation_cuda_forward(
+                input1.GetTensorData<double>(),
+                input2.GetTensorData<double>(),
+                output.GetTensorMutableData<double>(),
                 N,
                 C,
                 iH,

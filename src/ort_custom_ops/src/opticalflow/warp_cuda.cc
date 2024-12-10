@@ -27,30 +27,33 @@ void warp_cuda_forward(const T*, const T*, T*, int, int, int, int, cudaStream_t 
 
 void WarpKernel::ComputeCUDA(OrtKernelContext* context)
 {
-    const OrtValue* tensorinput = ort_.KernelContext_GetInput(context, 0);
-    const OrtValue* flowinput = ort_.KernelContext_GetInput(context, 1);
+    Ort::KernelContext ort_context{context};
+    Ort::ConstValue tensorinput = ort_context.GetInput(0);
+    Ort::ConstValue flowinput = ort_context.GetInput(1);
+    Ort::TensorTypeAndShapeInfo input_X_info = tensorinput.GetTensorTypeAndShapeInfo();
+    ONNXTensorElementDataType input_X_type = input_X_info.GetElementType();
 
-    OrtTensorTypeAndShapeInfo* input_X_info = ort_.GetTensorTypeAndShape(tensorinput);
-    ONNXTensorElementDataType input_X_type = ort_.GetTensorElementType(input_X_info);
-    ort_.ReleaseTensorTypeAndShapeInfo(input_X_info);
-
-    OrtTensorDimensions dimensions(ort_, tensorinput);
+    // OrtTensorDimensions dimensions(ort_, input1);
+    std::vector<int64_t> dimensions = input_X_info.GetShape();
     const int64_t N = dimensions[0];
     const int64_t C = dimensions[1];
     const int64_t iH = dimensions[2];
     const int64_t iW = dimensions[3];
 
     std::vector<int64_t> output_dims = {N, C, iH, iW};
-    OrtValue* output = ort_.KernelContext_GetOutput(context, 0, output_dims.data(), output_dims.size());
+    // OrtValue* output = ort_.KernelContext_GetOutput(context, 0, output_dims.data(), output_dims.size());
+    auto output = ort_context.GetOutput(0, output_dims.data(), output_dims.size());
 
     // important to get current computestream, otherwise, on repeated executions corrupted data will be silently read
-    auto compute_stream = reinterpret_cast<cudaStream_t>(ort_.KernelContext_GetGPUComputeStream(context));
+    auto compute_stream = reinterpret_cast<cudaStream_t>(ort_context.GetGPUComputeStream());
+
 
     switch (input_X_type) {
         case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
-            warp_cuda_forward(ort_.GetTensorData<float>(tensorinput),
-                ort_.GetTensorData<float>(flowinput),
-                ort_.GetTensorMutableData<float>(output),
+            warp_cuda_forward(
+                tensorinput.GetTensorData<float>(),
+                flowinput.GetTensorData<float>(),
+                output.GetTensorMutableData<float>(),
                 N,
                 C,
                 iW,
@@ -58,9 +61,10 @@ void WarpKernel::ComputeCUDA(OrtKernelContext* context)
                 compute_stream);
             break;
         case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE:
-            warp_cuda_forward(ort_.GetTensorData<double>(tensorinput),
-                ort_.GetTensorData<double>(flowinput),
-                ort_.GetTensorMutableData<double>(output),
+            warp_cuda_forward(
+                tensorinput.GetTensorData<double>(),
+                flowinput.GetTensorData<double>(),
+                output.GetTensorMutableData<double>(),
                 N,
                 C,
                 iW,
