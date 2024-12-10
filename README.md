@@ -7,7 +7,7 @@ https://github.com/MaxReimann/video-stream-consistency/assets/5698958/c4567551-0
 
 
 
-### [Project Page](https://maxreimann.github.io/stream-consistency/) | [Paper](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14891) | [arxiv] (https://arxiv.org/abs/2301.00750) 
+### [Project Page](https://maxreimann.github.io/stream-consistency/) | [Paper](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14891) | [ArXiv](https://arxiv.org/abs/2301.00750) 
 
 Blind video consistency produces temporally consistent videos from per-frame processed/stylized inputs without knowledge of the applied processing methods. 
 
@@ -28,7 +28,7 @@ If you are using windows, a precompiled version will automatically downloaded du
 If you are using linux, either install the dev libraries via packages: `apt install ffmpeg`, or via source, the project has been tested with ffmpeg5 but should also work with other versions. If installed via source make sure to build shared libraries and enable x264 library support.
 
 To install, simply run the cmake (preferrably in a directory "build"), CMake will automatically download a CUDA-enabled build of ONNXRuntime. 
-In the current version CUDA12-based ONNXRuntime 1.20 is installed, the last working version using CUDA11-based ONNXRuntime 1.13 was commit https://github.com/MaxReimann/video-stream-consistency/commit/571f62bb4321c3cf286df50916eead664307f4df
+In the current version CUDA12-based ONNXRuntime 1.20 is installed, the last working version using CUDA11-based ONNXRuntime 1.13 was commit [07f4df](https://github.com/MaxReimann/video-stream-consistency/commit/571f62bb4321c3cf286df50916eead664307f4df)
 
 After building, two binaries are found in the build directory:
 `FlowVideoConsistency` is the CLI-based application for processing videos to file, `FlowVideoConsistencyPlayer` the interactive GUI application for live-viewing.
