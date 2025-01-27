@@ -113,14 +113,14 @@ void GPUImage::copyFromQImage(const QImage &image) {
     }
 
     size_t nelems = width*height*4; //  use 4 channels here to have nicely aligned data
-    unsigned char *image_data;
     if (image.format() != QImage::Format_RGBA8888) {
         auto tmpRGBA = image.convertToFormat(QImage::Format_RGBA8888);
-        image_data = tmpRGBA.bits();
+        char_to_cuda_float_image(tmpRGBA.bits(), nelems, *this);
+
     } else {
-        image_data = const_cast<unsigned char *>(image.bits());
+        unsigned char *image_data = const_cast<unsigned char *>(image.bits());
+        char_to_cuda_float_image(image_data, nelems, *this);
     }
-    char_to_cuda_float_image(image_data, nelems, *this);
 }
 
 // will multiply pixel data by 255 and convert from float to uchar

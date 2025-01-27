@@ -78,6 +78,15 @@ void char_to_cuda_float_image(
         throw std::runtime_error("Unable to allocate CUDA memory.");
     }
 
+    size_t free_mem, total_mem;
+    cudaMemGetInfo(&free_mem, &total_mem);
+
+    if (num_bytes > free_mem) {
+        std::cout << "Free memory: " << free_mem / (1024.0 * 1024.0) << " MB\n";
+        std::cout << "Total memory: " << total_mem / (1024.0 * 1024.0) << " MB\n";
+        std::cout << "Trying to allocate: " << num_bytes / (1024.0 * 1024.0) << " MB\n";
+        throw std::runtime_error("Not enough GPU memory for allocation.");
+    }
     const auto errorMemcpy = cudaMemcpy(device_data, inputImage, num_bytes, cudaMemcpyKind::cudaMemcpyHostToDevice);
     if (errorMemcpy != cudaError::cudaSuccess) {
         throw std::runtime_error("Unable to copy data from host to device.");

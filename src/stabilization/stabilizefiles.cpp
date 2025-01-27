@@ -71,6 +71,21 @@ FileStabilizer::FileStabilizer(QDir originalFrameDir, QDir processedFrameDir, QD
 
 bool FileStabilizer::loadFrame(int i)
 {
+    if (i < 0 || i >= inputPaths->originalFramePaths.size() || i >= inputPaths->processedFramePaths.size()) {
+        // probably reached end of video
+        return false;
+    }
+
+    if (!QFile::exists(inputPaths->originalFramePaths[i])) {
+        qWarning() << "Original frame path does not exist:" << inputPaths->originalFramePaths[i];
+        return false;
+    }
+
+    if (!QFile::exists(inputPaths->processedFramePaths[i])) {
+        qWarning() << "Processed frame path does not exist:" << inputPaths->processedFramePaths[i];
+        return false;
+    }
+
     QSharedPointer<QImage> image(new QImage(QImage(inputPaths->originalFramePaths[i]).scaled(width, height)));
     originalFramesQt << image;
     originalFrames << imageToGPU(*image.get());
@@ -92,6 +107,7 @@ void FileStabilizer::outputFrame(int i, QSharedPointer<QImage> q) {
 
 bool FileStabilizer::stabilizeAll() {
     preloadProcessedFrames();
+    std::cout << "Starting stabilization..." << std::endl;
     for (int i = k;; i++) {
         // i is the frame to process now
         // k frames before, frame i, k frames after are supposed to be in original/processedFrames list
