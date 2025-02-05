@@ -72,6 +72,8 @@ Start FlowVideoConsistencyPlayer GUI:
 To use the fast setting (i.e. downscale flow computation), an environment variable FLOWDOWNSCALE can be set.
 I.e., to downscale by 2x (a recommended factor when processing full-HD), set `FLOWDOWNSCALE=2 ./FlowVideoConsistencyPlayer`.
 
+The default location of config.json is video-stream-consistency/config.json if you want to update the config file address it can be done in video-stream-consistency/src/stabilization/videostabilizer.cpp line-155
+
 ## Code structure
 - `model-conversion` contains our trained pytorch models and onnx conversion and testing code.
 - `src/decoding` contains libav/ffmpeg handling to decode two concurrent streams into Qt images
@@ -79,6 +81,7 @@ I.e., to downscale by 2x (a recommended factor when processing full-HD), set `FL
 - `src/inference` contains wrapper code for onnxruntime models
 - `src/ort_custom_ops` contains our CPU and CUDA onnxruntime custom ops for the correlation and warping kernels
 - `src/stabilization` contains the stabilization routines, as well as flow loading/flow model execution as well as various helpers
+- `config.json` contains the hyperparameters for CLI inference.
 
 
 Code was tested under linux 20.04 and should work under windows as well.

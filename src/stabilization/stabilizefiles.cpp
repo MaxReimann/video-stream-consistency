@@ -26,15 +26,18 @@
 #include <QDir>
 #include <QStringList>
 #include <QImage>
-#include <QDebug>
+#include <QDebug>   
 #include <QSharedPointer>
 #include <QList>
 #include <QElapsedTimer>
 
 #define WARMUP_FRAMES (k+5)
 
+// FileStabilizer::FileStabilizer(QDir originalFrameDir, QDir processedFrameDir, QDir stabilizedFrameDir, std::optional<QDir> opticalFlowDir,  
+//     std::optional<QString> modelType, int width, int height, int batchSize, bool computeOpticalFlow,
+//     const QString &configFilePath):
 FileStabilizer::FileStabilizer(QDir originalFrameDir, QDir processedFrameDir, QDir stabilizedFrameDir, std::optional<QDir> opticalFlowDir,  
-    std::optional<QString> modelType, int width, int height, int batchSize, bool computeOpticalFlow) : 
+    std::optional<QString> modelType, int width, int height, int batchSize, bool computeOpticalFlow):
     VideoStabilizer(width, height, batchSize,  modelType, computeOpticalFlow), originalFrameDir(originalFrameDir), 
     processedFrameDir(processedFrameDir), stabilizedFrameDir(stabilizedFrameDir), opticalFlowDir(opticalFlowDir)
 {
