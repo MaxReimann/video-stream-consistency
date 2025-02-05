@@ -72,7 +72,14 @@ Start FlowVideoConsistencyPlayer GUI:
 To use the fast setting (i.e. downscale flow computation), an environment variable FLOWDOWNSCALE can be set.
 I.e., to downscale by 2x (a recommended factor when processing full-HD), set `FLOWDOWNSCALE=2 ./FlowVideoConsistencyPlayer`.
 
-The default location of config.json is video-stream-consistency/config.json if you want to update the config file address it can be done in video-stream-consistency/src/stabilization/videostabilizer.cpp line-155
+The default location of config.json is:
+```
+video-stream-consistency/config.json
+```
+if you want to update the config file address it can be done in: 
+```
+video-stream-consistency/src/stabilization/videostabilizer.cpp     line-->155
+```
 
 ## Code structure
 - `model-conversion` contains our trained pytorch models and onnx conversion and testing code.
