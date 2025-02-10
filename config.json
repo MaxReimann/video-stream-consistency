@@ -1,7 +1,7 @@
 {
     "alpha": 6800.0,
     "beta": 6800.0,
-    "gamma": 10.0,
+    "gamma": 2.0,
     "pyramidLevels": 2,
     "numIter": 150,
     "stepSize": 0.15,
