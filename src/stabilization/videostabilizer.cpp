@@ -23,6 +23,10 @@
 #include <cstring>
 #include <optional>
 
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
+
 #include <cmath>
 #include <QDir>
 #include <QStringList>
@@ -101,8 +105,45 @@ VideoStabilizer::VideoStabilizer(int width, int height, int batchSize, std::opti
     initHyperParams();
 }
 
+bool VideoStabilizer::loadHyperParamsFromFile(const QString &configFilePath) {
+    qDebug() << "Loading Hyperparameters From:" << configFilePath;
+
+    QFile configFile(configFilePath);
+    if (!configFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Unable to open config file:" << configFilePath;
+        return false;
+    }
+
+    QByteArray data = configFile.readAll();
+    QJsonParseError parseError;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(data, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        qWarning() << "Error parsing config file:" << parseError.errorString();
+        return false;
+    }
+
+    if (!jsonDoc.isObject()) {
+        qWarning() << "Config file does not contain a valid JSON object.";
+        return false;
+    }
+
+    QJsonObject obj = jsonDoc.object();
+
+    // Set parameters if they exist, otherwise keep the default values
+    if (obj.contains("alpha")) controlParameters.alpha = float(obj["alpha"].toDouble());
+    if (obj.contains("beta")) controlParameters.beta = float(obj["beta"].toDouble());
+    if (obj.contains("gamma")) controlParameters.gamma = float(obj["gamma"].toDouble());
+    if (obj.contains("pyramidLevels")) controlParameters.pyramidLevels = obj["pyramidLevels"].toInt();
+    if (obj.contains("numIter")) controlParameters.numIter = obj["numIter"].toInt();
+    if (obj.contains("stepSize")) controlParameters.stepSize = float(obj["stepSize"].toDouble());
+    if (obj.contains("momFac")) controlParameters.momFac = float(obj["momFac"].toDouble());
+
+    return true;
+}
+
 void VideoStabilizer::initHyperParams()
-{
+{   
+    // default values
     controlParameters.alpha = 6800.0f; // increasing alpha can help reducing ghosting
     controlParameters.beta = 6800.0f;
     controlParameters.gamma = 2.0f; // higher = increased consistency, can also introduce ghosting for fast moving objects
@@ -110,6 +151,21 @@ void VideoStabilizer::initHyperParams()
     controlParameters.numIter = 150;
     controlParameters.stepSize = 0.15f;
     controlParameters.momFac = 0.15f;
+
+    QString configFilePath = "../config.json";
+    if (loadHyperParamsFromFile(configFilePath)) {
+        qDebug() << "Loaded hyperparameters from" << configFilePath;
+    } else {
+        qDebug() << "Using default hyperparameters.";
+    }
+
+    qDebug() << "alpha =" << controlParameters.alpha;
+    qDebug() << "beta =" << controlParameters.beta;
+    qDebug() << "gamma =" << controlParameters.gamma;
+    qDebug() << "pyramidLevels =" << controlParameters.pyramidLevels;
+    qDebug() << "numIter =" << controlParameters.numIter;
+    qDebug() << "stepSize =" << controlParameters.stepSize;
+    qDebug() << "momFac =" << controlParameters.momFac;
 
     timeStabilized = 0.0;
     timeOptFlow = 0.0;
@@ -234,7 +290,11 @@ bool VideoStabilizer::doOneStep(int currentFrame) {
         get_consist_out(*processedFrames[1], adapCmbPr, consWt, c.numIter, c.stepSize, c.momFac, consisOut);
     }
 
+    /*
+        The reason for using BGR888 instead of using RGB888 to remove the A channel is because OpenCV defaults to BGR format so furthur computation with these will be faster
+    */
     auto out = QSharedPointer<QImage>(new QImage(QSize(consisOut.width, consisOut.height), QImage::Format_RGBA8888));
+    // auto out = QSharedPointer<QImage>(new QImage(QSize(consisOut.width, consisOut.height), QImage::Format_BGR888));
     consisOut.copyToQImage(*out);
 
     if (currentFrame > WARMUP_FRAMES)

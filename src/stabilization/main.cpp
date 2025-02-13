@@ -62,8 +62,22 @@ int main(int argc, char *argv[])
             QCoreApplication::translate("main", "directory"));
     parser.addOption(flowDirectoryOption);
 
+    // QCommandLineOption configOption(QStringList() << "config",
+    //         QCoreApplication::translate("main", "Path to the JSON configuration file with hyperparameters."),
+    //         QCoreApplication::translate("main", "config"));
+    // parser.addOption(configOption);
+
     parser.process(app);
     const QStringList& args = parser.positionalArguments();
+
+    // QString configPath;
+    // if (parser.isSet(configOption)) {
+    //     configPath = parser.value(configOption);
+    // } 
+    // else {
+    //     configPath = "../config.json";  // default config file
+    // }
+    // qDebug() << "CONFIG FILE PATH: " << configPath;
 
     if (parser.isSet(helpOption) || args.size() != 3) {
         parser.showHelp();
@@ -132,6 +146,8 @@ int main(int argc, char *argv[])
         Q_ASSERT(loaded);
         assert(width != 0 && height != 0);
 
+        qDebug() << "USING FILE STABILIZER";
+        // FileStabilizer fs(originalFrameDir, processedFrameDir, stabilizedFrameDir, opticalFlowDir, computeModel, width, height, batchSize, parser.isSet(computeOption), configPath);
         FileStabilizer fs(originalFrameDir, processedFrameDir, stabilizedFrameDir, opticalFlowDir, computeModel, width, height, batchSize, parser.isSet(computeOption));
         return fs.stabilizeAll();
     } else {
@@ -163,6 +179,7 @@ int main(int argc, char *argv[])
             }
         }
 
+        qDebug() << "USING STREAM STABILIZER";
         StreamStabilizer ss(originalFrameDir, processedFrameDir, stabilizedFrameDir, computeModel, width, height, batchSize, false);
         return ss.stabilizeAll();
     }

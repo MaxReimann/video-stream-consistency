@@ -30,6 +30,9 @@ class FileStabilizer : protected VideoStabilizer
         void outputFrame(int i, QSharedPointer<QImage> q);
         void retrieveOpticalFlow(int currentFrame);
     public:
+        // FileStabilizer(QDir originalFrameDir, QDir processedFrameDir, QDir stabilizedFrameDir, std::optional<QDir> opticalFlowDir, 
+        //                 std::optional<QString> modelType, int width, int height, int batchSize, bool computeOpticalFlow,
+        //                 const QString &configFilePath);
         FileStabilizer(QDir originalFrameDir, QDir processedFrameDir, QDir stabilizedFrameDir, std::optional<QDir> opticalFlowDir, 
                         std::optional<QString> modelType, int width, int height, int batchSize, bool computeOpticalFlow);
         bool stabilizeAll();

@@ -102,6 +102,8 @@ class VideoStabilizer {
       void outputFinalFrames(int currentFrame);
       void retrieveOpticalFlow(int currentFrame);
 
+      bool loadHyperParamsFromFile(const QString &configFilePath);
+
     public:
         int k = 1;
         VideoStabilizer(int width, int height, int batchSize, std::optional<QString> modelType, bool computeFlow);

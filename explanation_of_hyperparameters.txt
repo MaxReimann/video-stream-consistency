@@ -1,0 +1,32 @@
+This explains what each of the hyperparameters does as i understand it:
+
+alpha and beta:
+    they control the weights in the smoothmess term in the optimization equation
+    more means stronger implementation of TC
+    They control how much importance is given to smoothness constraints versus fidelity to the processed frames
+    too much may induce too much smoothmess and thus artifacts
+
+gamma:
+    Balances the importance of global vs local consistency in the optimization
+    increasing would increase the global consistency reducing the long term inconsistency
+    too much might lead to over smoothning
+    decreasing it means a boost to the local consistency meaning higher frame by frame fidelity
+    decreasing too much would lead to noisy video
+
+pyramid_levels:
+    the levels in optical flow computation
+    more means more time but more accurate flow
+    less means faster but less accurate flow
+
+iteration:
+    the steps the optimization solver runs for
+    more means slower but more consistent frames
+    less means fast and obviously less consistent
+
+step_size:
+    the learning rate fot the optimization solver
+
+mom_fac:
+    the momentum_factor controls how much of the previous optimization step influences the current step
+    a higher value would speed up the convergence by carrying over past gradients
+    and decreasing may be more stable but slower
