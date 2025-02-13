@@ -1,0 +1,80 @@
+config_1
+{
+    "alpha": 6800.0,
+    "beta": 6800.0,
+    "gamma": 2.0,
+    "pyramidLevels": 3,
+    "numIter": 200,
+    "stepSize": 0.1,
+    "momFac": 0.15
+}
+config_2
+{
+    "alpha": 5000.0,
+    "beta": 5000.0,
+    "gamma": 5.0,
+    "pyramidLevels": 5,
+    "numIter": 150,
+    "stepSize": 0.15,
+    "momFac": 0.15
+}
+config_3
+{
+    "alpha": 6800.0,
+    "beta": 6800.0,
+    "gamma": 10.0,
+    "pyramidLevels": 2,
+    "numIter": 500,
+    "stepSize": 0.05,
+    "momFac": 0.05
+}
+config_4
+{
+    "alpha": 8000.0,
+    "beta": 8000.0,
+    "gamma": 2.0,
+    "pyramidLevels": 8,
+    "numIter": 150,
+    "stepSize": 0.15,
+    "momFac": 0.15
+}
+config_5
+{
+    "alpha": 10000.0,
+    "beta": 10000.0,
+    "gamma": 2.0,
+    "pyramidLevels": 2,
+    "numIter": 150,
+    "stepSize": 0.15,
+    "momFac": 0.15
+}
+config_6
+{
+    "alpha": 6800.0,
+    "beta": 6800.0,
+    "gamma": 4.0,
+    "pyramidLevels": 4,
+    "numIter": 150,
+    "stepSize": 0.15,
+    "momFac": 0.15
+}
+config_7
+{
+    "alpha": 8000.0,
+    "beta": 8000.0,
+    "gamma": 4.0,
+    "pyramidLevels": 4,
+    "numIter": 150,
+    "stepSize": 0.15,
+    "momFac": 0.15
+}
+8
+{
+    "alpha": 13600.0,
+    "beta": 13600.0,
+    "gamma": 4.0,
+    "pyramidLevels": 4,
+    "numIter": 300,
+    "stepSize": 0.15,
+    "momFac": 0.15
+}

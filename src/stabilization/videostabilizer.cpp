@@ -290,7 +290,11 @@ bool VideoStabilizer::doOneStep(int currentFrame) {
         get_consist_out(*processedFrames[1], adapCmbPr, consWt, c.numIter, c.stepSize, c.momFac, consisOut);
     }
 
+    /*
+        The reason for using BGR888 instead of using RGB888 to remove the A channel is because OpenCV defaults to BGR format so furthur computation with these will be faster
+    */
     auto out = QSharedPointer<QImage>(new QImage(QSize(consisOut.width, consisOut.height), QImage::Format_RGBA8888));
+    // auto out = QSharedPointer<QImage>(new QImage(QSize(consisOut.width, consisOut.height), QImage::Format_BGR888));
     consisOut.copyToQImage(*out);
 
     if (currentFrame > WARMUP_FRAMES)

@@ -104,9 +104,22 @@ QString FileStabilizer::formatIndex(int index) {
 };
 
 
+// void FileStabilizer::outputFrame(int i, QSharedPointer<QImage> q) {
+//     q->save(stabilizedFrameDir.filePath(formatIndex(i) + ".jpg"));
+// }
+
+/*
+    In order to make the functio Output frame produce png outputs you need to remove the A channel from the from RGBA that is why there is this extra step
+    But the reason its commented here is that instead of convering it here you can produce the image without one in the first place to save comp. 
+    check videostabilizer.cpp line no 293 for the source.
+*/
+
 void FileStabilizer::outputFrame(int i, QSharedPointer<QImage> q) {
-    q->save(stabilizedFrameDir.filePath(formatIndex(i) + ".jpg"));
+    QImage img = q->convertToFormat(QImage::Format_RGB32);
+    img.save(stabilizedFrameDir.filePath(formatIndex(i) + ".png"));
+    // q->save(stabilizedFrameDir.filePath(formatIndex(i) + ".png"));
 }
+
 
 bool FileStabilizer::stabilizeAll() {
     preloadProcessedFrames();
