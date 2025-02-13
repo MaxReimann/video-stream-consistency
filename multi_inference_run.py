@@ -15,11 +15,11 @@ def run_flow_consistency(gt_frame_dir:str, processed_frame_dir:str, generated_fr
     
     if downscalingfactor != None:
         commands = [
-            f"unset FLOWDOWNSCALE && export FLOWDOWNSCALE={downscalingfactor} && LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH && cd build && ./FlowVideoConsistency -c pwcnet-light {gt_frame_dir} {processed_frame_dir} {generated_frame_dir}"
+            f"unset FLOWDOWNSCALE && export FLOWDOWNSCALE={downscalingfactor} && LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH && cd && cd video-stream-consistency/build && ./FlowVideoConsistency -c pwcnet-light {gt_frame_dir} {processed_frame_dir} {generated_frame_dir}"
         ]
     else:
         commands = [
-            f"unset FLOWDOWNSCALE && LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH && cd build && ./FlowVideoConsistency -c pwcnet-light {gt_frame_dir} {processed_frame_dir} {generated_frame_dir}"
+            f"unset FLOWDOWNSCALE && LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH && cd && cd video-stream-consistency/build && ./FlowVideoConsistency -c pwcnet-light {gt_frame_dir} {processed_frame_dir} {generated_frame_dir}"
         ]
     
     result = subprocess.run(commands, shell=True, capture_output=True, text=True)
